@@ -1,102 +1,162 @@
 # Still
 
-A native macOS menu bar mixer with per-app volume, mute, and output routing.
-SwiftUI and Core Audio process taps. No third-party dependencies, installed audio driver,
-privileged helper, recording, or network service.
+A native macOS menu bar mixer: per-app volume, mute, and output routing.
 
-## Build and run
+Still gives every app its own volume slider and its own output device, from a panel that
+hangs off the menu bar. Play music through your headphones while a call stays on the
+speakers, or turn one noisy app down without touching anything else.
 
-Requires macOS 14.2+ and Xcode 16+ (Swift 6 compiler). This checkout is being developed
-with Xcode 27 on Apple Silicon. Older OS and Intel hardware still require runtime testing.
+<p align="center">
+  <img src="docs/images/panel-light.png" alt="The Still panel in light appearance" width="320">
+  <img src="docs/images/panel-dark.png" alt="The Still panel in dark appearance" width="320">
+</p>
+
+It is a single app with no third-party dependencies, no installed audio driver, no
+privileged helper, no recording, and no network service. Audio is processed on your Mac
+and is never written to disk or sent anywhere.
+
+## Requirements
+
+- macOS 14.2 or later
+- Xcode 16 or later (Swift 6 compiler) to build it
+
+Developed on Apple Silicon. Intel hardware has not been tested.
+
+## Install
+
+There is no signed release yet, so build it yourself:
 
 ```sh
-swift test
+git clone https://github.com/Kandel-Bibas/still.git
+cd still
 bash scripts/build.sh
-open dist/Still.app
 ```
 
-The build produces a locally ad-hoc-signed `dist/Still.app`. It is suitable for local
-testing, not a notarized distribution. To distribute it, use your own Developer ID
-signing and notarization. Rebuilding an ad-hoc-signed app may require macOS to grant
-audio capture permission again.
-
-Open the sliders icon in the menu bar, enable Still, and change an app's volume or
-output. The first managed route requests macOS **System Audio Recording** permission.
-If denied, allow Still in System Settings → Privacy & Security → Screen & System Audio
-Recording, then retry the route (or reopen Still if macOS asks).
-
-## Controls
-
-- Left-click the menu bar icon to open or close the panel. Escape, clicking outside
-  it, or switching apps closes it.
-- Right-click the icon for a menu: Enable Still, Still Settings…, and Quit Still.
-- The icon dims when the mixer is off. Still makes its menu bar item visible at every
-  launch, so a hidden item cannot persist across restarts. macOS still hides items when
-  the menu bar runs out of room, which a Mac with a notch does at a smaller item count.
-- The app list scrolls once it outgrows the space below the menu bar; the cap
-  adapts to the screen height.
-- Active audio apps appear automatically; pin favorites to retain them while inactive.
-- Each app has a 0–100% amplitude slider, a separate mute button, and an output picker.
-- System output follows the Mac's default output for managed routes. Untouched apps
-  at 100% use their own original audio path, including any device selected inside that app.
-- If an explicitly selected device disappears, Still retains a muting tap and waits
-  for that device. It never intentionally falls back to speakers. Choose another output
-  to resume elsewhere.
-- Switching the mixer off or quitting releases Still's control. Apps return to their
-  own original volume and output; that can make a previously muted app audible.
-- Settings opens from the panel footer or the right-click menu (⌘, still works while
-  the panel is focused). It includes launch at login; move the app to a stable
-  location before enabling it.
-- Preferences live in `~/Library/Application Support/Still/preferences.json`.
-
-## Audio architecture
-
-An event-driven control queue discovers Core Audio processes/devices and manages one
-private process tap + private aggregate output per controlled app. Original app output
-is suppressed while a tap exists, including while an output is absent or being rebuilt.
-Known configured processes get their taps before playback; output I/O starts only when
-they become active. New processes still require discovery, so initial audio at app launch
-cannot be guaranteed suppressed on every supported OS.
-
-A C++ callback maps stereo Float32 PCM to a supported output with a 5ms gain ramp.
-Its callback performs no allocation, locks, logging, Swift/Objective-C calls, or file I/O.
-It explicitly disables physical input streams and validates buffer geometry to avoid
-playing microphone input. Core Audio aggregate tap drift compensation handles clock
-differences. Unsupported formats fail visibly rather than attempting unsafe playback.
-
-Device/process notifications drive discovery. A one-second health check exists only
-while routes render; there are no persistent meters or UI animation timers. Unmodified
-apps bypass audio processing. Settings writes are debounced and atomic.
-
-## Current boundaries
-
-- Supports a stereo mixed tap and a single Float32 output stream, including mono
-  downmix or the first two channels of a multichannel stream. Multiple output streams,
-  encoded audio, specialized channel maps, and exclusive-device applications are not supported.
-- Nested browser/Electron helpers are grouped with their enclosing app. Shared system
-  helpers whose owner cannot be established remain separate named sources; browser-tab
-  routing is not implemented.
-- Abrupt Bluetooth changes and sleep/wake can produce a brief gap. Failed routes remain
-  muted with a retry action while their taps can be retained. If tap creation itself fails,
-  Still cannot suppress the original audio and reports the failure.
-- No boost, EQ, recording, auto-ducking, solo, global hotkeys, or Shortcuts integration.
-
-## Development diagnostics
+That produces `dist/Still.app`. Move it somewhere permanent before you start using it —
+`/Applications` is the obvious choice — then open it:
 
 ```sh
-# Read-only inventory; prints local device identifiers and running audio apps.
-dist/Still.app/Contents/MacOS/Still --diagnose
+cp -R dist/Still.app /Applications/
+open /Applications/Still.app
+```
 
-# Render synthetic native UI fixtures. Doesn't capture the screen or start audio routes.
+Use `scripts/build.sh` rather than a bare `swift build`. The script pins the linker's
+SDK and deployment target, without which AppKit and SwiftUI fall back to an older
+control appearance, and it adds the `Info.plist` and signature the audio permission
+prompt needs.
+
+The build is signed ad hoc for local use. It is not notarized, so macOS will warn the
+first time you open it: right-click the app and choose **Open**. Rebuilding may make
+macOS ask for audio permission again.
+
+## Granting permission
+
+The first time you route or change an app, macOS asks for **System Audio Recording**
+access. Still needs it to read an app's audio, apply your volume, and play it back.
+
+If you decline, allow Still under **System Settings → Privacy & Security → Screen &
+System Audio Recording** and try again. On some macOS versions the section is called
+Screen Recording. If macOS asks you to quit and reopen Still, do that before switching
+the mixer on.
+
+While Still holds a live audio tap, macOS shows a recording indicator in the menu bar.
+That is the system telling you an app can hear your audio, and it appears for as long as
+any app is being controlled.
+
+## Using it
+
+Click the sliders icon in the menu bar to open the panel, and click it again, press
+Escape, or click anywhere else to close it. Right-click the icon for a short menu with
+Enable Still, Settings, and Quit.
+
+- Apps show up on their own as they start playing. Pin one to keep it in Favorites while
+  it is idle.
+- Each row has a 0–100% volume slider, a separate mute button, and an output picker.
+- **System output** follows whatever your Mac is set to. Pick a specific device to send
+  that app somewhere else.
+- An app left at 100% on System output keeps its own audio path untouched, including any
+  device chosen inside the app itself.
+- The icon dims when the mixer is switched off.
+
+Your settings live in `~/Library/Application Support/Still/preferences.json` and are
+remembered per app.
+
+### When a device disappears
+
+If you send an app to a device and that device disconnects, Still keeps the app muted and
+waits for it to come back rather than dumping the audio onto the speakers.
+
+<p align="center">
+  <img src="docs/images/panel-waiting.png" alt="A row waiting for a disconnected output, and a row reporting a failed route" width="320">
+</p>
+
+Reconnect the device and the app resumes at its saved volume, or pick another output to
+move it now.
+
+### Switching off
+
+Turning the mixer off, or quitting Still, hands every app back its original volume and
+output. An app that Still was muting becomes audible again.
+
+Settings has a launch-at-login option. Move the app somewhere permanent before you turn
+it on, or macOS will lose track of it.
+
+## How it works
+
+An event-driven control queue watches Core Audio for processes and devices. When you
+change an app, Still creates a private process tap for it plus a private aggregate
+output device, and a small C++ callback maps the tapped stereo audio onto your chosen
+output with a 5 ms gain ramp. That callback does no allocation, locking, or logging, and
+it explicitly disables physical input streams so microphone audio can never reach an
+output.
+
+An app you have not changed gets no tap at all and keeps its own audio path, which is why
+the mixer costs nothing until you use it.
+
+`docs/still-report.html` is an illustrated walkthrough of the whole design — open it in a
+browser.
+
+## Limitations
+
+- A stereo tap onto a single Float32 output stream. Encoded audio, exotic channel maps,
+  and exclusive-device apps are not supported.
+- A brand new process can be audible for a moment before Still discovers it and creates
+  its tap.
+- Browser and Electron helpers are grouped under their parent app. Per-tab routing is not
+  implemented, and a helper whose owner cannot be determined appears as its own row.
+- Bluetooth changes and sleep/wake can produce a brief gap.
+- No boost above 100%, EQ, solo, ducking, global hotkeys, or Shortcuts support.
+
+## Development
+
+```sh
+swift test                                   # all tests
+swift test --filter PanelPlacementTests      # one suite
+bash scripts/build.sh                        # build dist/Still.app
+```
+
+The UI can be inspected without a screen. This renders the real panel in every state to
+PNGs:
+
+```sh
 dist/Still.app/Contents/MacOS/Still --render-previews dist/previews
+```
+
+Other diagnostics, all opt-in and local:
+
+```sh
+# Read-only inventory of audio devices and running audio apps.
+dist/Still.app/Contents/MacOS/Still --diagnose
 
 # Live discovery regression: new processes and idle/play/stop/resume in one engine.
 # Plays generated quiet audio without creating taps or changing saved preferences.
 dist/Still.app/Contents/MacOS/Still --discovery-probe "$PWD/dist/discovery-probe.json"
 
-# Live probe: plays two quiet generated tones, checks independent gain/mute and route
-# rebuilding, then exits. Use an absolute report path; may request audio permission.
+# Plays two quiet generated tones, checks independent gain/mute and route rebuilding.
+# Use an absolute report path; may request audio permission.
 open -n dist/Still.app --args --audio-probe "$PWD/dist/audio-probe.json"
 ```
 
-See [the hardware verification checklist](docs/verification.md) for release checks.
+Routing rules, panel placement, and the DSP are unit tested. Anything touching real
+devices needs the manual checks in [docs/verification.md](docs/verification.md);
+`AGENTS.md` has the repo's landmines.
