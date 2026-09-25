@@ -189,3 +189,7 @@ open -n dist/Still.app --args --audio-probe "$PWD/dist/audio-probe.json"
 Routing rules, panel placement, and the DSP are unit tested. Anything touching real
 devices needs the manual checks in [docs/verification.md](docs/verification.md);
 `AGENTS.md` has the repo's landmines.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
