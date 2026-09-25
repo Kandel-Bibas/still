@@ -11,6 +11,7 @@ import { APPS, DEVICES } from './state.js';
 
 const RAMP = 0.005; // seconds — the same ramp as Still's render callback
 const LOOKAHEAD = 0.15;
+const FADE_IN = 2; // seconds, first start only
 
 export class AudioEngine {
   constructor(state) {
@@ -32,7 +33,13 @@ export class AudioEngine {
     const first = !this.ctx;
     if (first) this.build();
     await this.ctx.resume();
-    if (first) for (const app of APPS) this.setPlaying(app.id, true);
+    if (first) {
+      // Four apps start at once; fade in so the first second isn't a jolt.
+      const t = this.ctx.currentTime;
+      this.master.gain.setValueAtTime(0, t);
+      this.master.gain.linearRampToValueAtTime(this.systemVolume, t + FADE_IN);
+      for (const app of APPS) this.setPlaying(app.id, true);
+    }
     this.emit('power', true);
   }
 
@@ -53,7 +60,7 @@ export class AudioEngine {
     limiter.threshold.value = -10; limiter.knee.value = 6; limiter.ratio.value = 12;
     limiter.attack.value = 0.003; limiter.release.value = 0.2;
     this.master = ctx.createGain();
-    this.master.gain.value = this.systemVolume;
+    this.master.gain.value = 0;
     this.masterMeter = ctx.createAnalyser(); this.masterMeter.fftSize = 1024;
     this.master.connect(limiter).connect(this.masterMeter).connect(ctx.destination);
 

@@ -631,6 +631,7 @@ function markup(uid) {
             <div class="mac-gate">
               <div class="mac-gate-card">
                 <svg class="mac-gate-icon" aria-hidden="true"><use href="assets/stickers.svg#speaker"/></svg>
+                <p class="mac-gate-warning">Heads up: this gets loud. Turn your volume down first.</p>
                 <button type="button" class="mac-gate-button">Turn on sound</button>
                 <p class="mac-gate-hint">Four apps will start playing at once. Use Still to calm them down.</p>
               </div>

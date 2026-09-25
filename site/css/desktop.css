@@ -294,6 +294,7 @@ button.mac-status:hover { background: rgba(120, 120, 128, .16); }
 .mac-gate-button:hover { transform: scale(1.04); }
 .mac-gate-button:active { transform: scale(.97); }
 .mac-gate-hint { margin: 0; color: #fff; font-size: 13px; opacity: .85; max-width: 320px; }
+.mac-gate-warning { margin: 0; color: #fff; font: 700 15px var(--ui); max-width: 320px; }
 
 /* ---------------------------------------------------------------------- now playing (compact only) */
 .mac-now-playing { display: none; padding: 16px; }
