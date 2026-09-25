@@ -9,6 +9,8 @@ a SwiftUI panel hosted by AppKit, Core Audio process taps, one C++ render callba
   which AppKit and SwiftUI fall back to an older control appearance, and it adds the
   Info.plist and ad-hoc signature the audio-capture prompt needs.
 - Test (all): `swift test`  ·  Test (single): `swift test --filter PanelPlacementTests`
+- Deploy the site: push to `main` (the Vercel project's Root Directory is `site`). Running
+  `vercel` from inside `site/` fails.
 - Look at the UI without a screen: `dist/Still.app/Contents/MacOS/Still --render-previews <dir>`
   renders the real panel to PNGs in every state. This is the UI verification loop —
   read the PNGs rather than asking for a screenshot.
