@@ -46,7 +46,7 @@ enum ProcessCatalog {
             result[id] = AudioApplication(id: id, name: running.localizedName ?? id,
                 bundleURL: running.bundleURL, processes: [], active: false)
         }
-        let applications = result.values.map { app in
+        let applications = result.values.map { (app: AudioApplication) -> AudioApplication in
             var app = app
             app.processes.sort()
             return app
