@@ -136,6 +136,7 @@ final class StatusItemController: NSObject {
         panel.makeKey()
         button.highlight(true)
         installMonitors()
+        store.setPanelVisible(true)
     }
 
     func closePanel() {
@@ -143,6 +144,7 @@ final class StatusItemController: NSObject {
         // on its own cannot leave the dismissal monitors installed.
         removeMonitors()
         statusItem.button?.highlight(false)
+        store.setPanelVisible(false)
         guard panel.isVisible else { return }
         panel.orderOut(nil)
     }

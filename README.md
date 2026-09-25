@@ -49,6 +49,17 @@ The build is signed ad hoc for local use. It is not notarized, so macOS will war
 first time you open it: right-click the app and choose **Open**. Rebuilding may make
 macOS ask for audio permission again.
 
+To stop that, sign with a stable self-signed certificate instead of ad hoc. Create one
+once in Keychain Access → Certificate Assistant → Create a Certificate…, with Identity
+Type "Self Signed Root" and Certificate Type "Code Signing", then point the build at it:
+
+```sh
+STILL_SIGN_IDENTITY="<cert name>" bash scripts/build.sh
+```
+
+A fixed certificate keeps the same designated requirement across rebuilds, so macOS
+stops re-asking for System Audio Recording permission every time.
+
 ## Granting permission
 
 The first time you route or change an app, macOS asks for **System Audio Recording**
@@ -101,6 +112,24 @@ output. An app that Still was muting becomes audible again.
 Settings has a launch-at-login option. Move the app somewhere permanent before you turn
 it on, or macOS will lose track of it.
 
+### Shortcuts and scripts
+
+Still registers a `still://` URL scheme, so a Shortcut or a shell script can drive it
+without App Intents:
+
+- `still://volume?app=<app>&value=<0-100>`
+- `still://mute?app=<app>&state=on|off|toggle`
+- `still://output?app=<app>&device=<device name | system>`
+
+`<app>` matches a running app's bundle id, or its name if no id matches. For example:
+
+```sh
+open "still://volume?app=Music&value=30"
+```
+
+Any app on the Mac can send these URLs, not just Shortcuts — a browser will ask before
+opening one.
+
 ## How it works
 
 An event-driven control queue watches Core Audio for processes and devices. When you
@@ -125,7 +154,7 @@ browser.
 - Browser and Electron helpers are grouped under their parent app. Per-tab routing is not
   implemented, and a helper whose owner cannot be determined appears as its own row.
 - Bluetooth changes and sleep/wake can produce a brief gap.
-- No boost above 100%, EQ, solo, ducking, global hotkeys, or Shortcuts support.
+- No boost above 100%, EQ, solo, ducking, or global hotkeys.
 
 ## Development
 

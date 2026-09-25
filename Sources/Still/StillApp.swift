@@ -55,6 +55,9 @@ enum StillLauncher {
 final class StillDelegate: NSObject, NSApplicationDelegate {
     private var store: MixerStore?
     private var controller: StatusItemController?
+    private var automation: AutomationHandler?
+    /// URLs that launched Still can arrive before `applicationDidFinishLaunching`.
+    private var launchURLs: [URL] = []
 
     /// `NSApplication.delegate` is weak, so the delegate is held here for the
     /// lifetime of the process.
@@ -73,6 +76,16 @@ final class StillDelegate: NSObject, NSApplicationDelegate {
         let store = MixerStore()
         self.store = store
         controller = StatusItemController(store: store)
+        let automation = AutomationHandler(store: store)
+        self.automation = automation
+        for url in launchURLs { automation.handle(url) }
+        launchURLs.removeAll()
+    }
+
+    /// Handles `still://` URLs sent by Shortcuts or scripts via `open still://...`.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let automation else { return launchURLs += urls }
+        for url in urls { automation.handle(url) }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

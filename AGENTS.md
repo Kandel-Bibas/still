@@ -26,6 +26,12 @@ a SwiftUI panel hosted by AppKit, Core Audio process taps, one C++ render callba
 - Pure, testable logic belongs in `Sources/MixerCore`. The test target imports only
   `MixerCore` and `AudioDSP`; `Sources/Still` is the executable and has no unit tests,
   so logic worth testing has to be moved out of it first.
+- Routing decisions live in `MixerCore/RouteReconciler`; `EngineService` only does
+  Core Audio I/O. Change routing there and cover it with the fake route in
+  `RouteReconcilerTests`.
+- A paused app's output keeps rendering for `idleGrace` (10 s) so resuming isn't
+  clipped — the tap alone mutes the app while an output is rebuilt. Don't remove it
+  as an optimisation.
 - The realtime path is `Sources/AudioDSP/AudioDSP.cpp`. Its callback must stay free of
   allocation, locks, logging, and Swift/Objective-C calls.
 

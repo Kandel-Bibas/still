@@ -12,28 +12,26 @@ struct EngineSnapshot {
 
 final class EngineService: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.bibaskandel.Still.audio-control", qos: .userInitiated)
-    private var preferences: [String: AppPreference] = [:]
-    private var enabled = false
-    private var suspended = false
+    private let reconciler: RouteReconciler
     private var stopped = false
     private var applications: [AudioApplication] = []
     private var devices: [OutputDevice] = []
     private var defaultUID: String?
-    private var routes: [String: AudioRoute] = [:]
-    private var errors: [String: String] = [:]
-    private var failedKeys: [String: String] = [:]
-    private var states: [String: RouteState] = [:]
     private var listeners: [AudioListener] = []
     private var processListeners: [AudioObjectID: [AudioListener]] = [:]
     private var refreshPending = false
     private var healthTimer: DispatchSourceTimer?
-    private var lastProgress: [String: (count: UInt64, time: Date)] = [:]
     var onSnapshot: ((EngineSnapshot) -> Void)?
+
+    init() {
+        reconciler = RouteReconciler(factory: HALRouteFactory(queue: queue))
+        reconciler.onInvalidated = { [weak self] in self?.scheduleRefresh() }
+    }
 
     func start(enabled: Bool, preferences: [String: AppPreference]) {
         queue.async { [self] in
-            self.enabled = enabled
-            self.preferences = preferences
+            reconciler.enabled = enabled
+            reconciler.preferences = preferences
             do {
                 for selector in [kAudioHardwarePropertyDevices, kAudioHardwarePropertyDefaultOutputDevice,
                                  kAudioHardwarePropertyProcessObjectList] {
@@ -48,9 +46,9 @@ final class EngineService: @unchecked Sendable {
 
     func update(enabled: Bool, preferences: [String: AppPreference]) {
         queue.async { [self] in
-            self.enabled = enabled
-            self.preferences = preferences
-            if !enabled { routes.removeAll(); errors.removeAll(); failedKeys.removeAll() }
+            reconciler.enabled = enabled
+            reconciler.preferences = preferences
+            if !enabled { reconciler.releaseAll() }
             reconcile()
             publish()
         }
@@ -60,27 +58,36 @@ final class EngineService: @unchecked Sendable {
 
     func retry(_ id: String) {
         queue.async { [self] in
-            errors[id] = nil
-            failedKeys[id] = nil
-            routes[id]?.hold()
+            reconciler.retry(id)
             refreshNow()
         }
     }
 
     func sleep() {
         queue.async { [self] in
-            suspended = true
-            routes.values.forEach { $0.hold() }
+            reconciler.suspend()
             updateHealthTimer()
         }
     }
 
     func wake() {
         queue.async { [self] in
-            suspended = false
-            failedKeys.removeAll()
-            errors.removeAll()
+            reconciler.resume()
             refreshNow()
+        }
+    }
+
+    /// Output levels are only measured while something shows them.
+    func setMetering(_ enabled: Bool) {
+        queue.async { [self] in reconciler.setMetering(enabled) }
+    }
+
+    /// Reads the latest output peak of every rendering app on the control queue, where
+    /// routes are torn down, and delivers them to `completion` on the main queue.
+    func readLevels(_ completion: @escaping @Sendable ([String: Float]) -> Void) {
+        queue.async { [self] in
+            let peaks = reconciler.outputPeaks()
+            DispatchQueue.main.async { completion(peaks) }
         }
     }
 
@@ -91,7 +98,7 @@ final class EngineService: @unchecked Sendable {
             processListeners.removeAll()
             healthTimer?.cancel()
             healthTimer = nil
-            routes.removeAll()
+            reconciler.releaseAll()
         }
     }
 
@@ -150,77 +157,19 @@ final class EngineService: @unchecked Sendable {
 
     private func reconcile() {
         guard !stopped else { return }
-        let appIDs = Set(applications.map(\.id))
-        for id in routes.keys where !appIDs.contains(id) {
-            routes[id] = nil
-            failedKeys[id] = nil
-            errors[id] = nil
-            lastProgress[id] = nil
+        reconciler.sources = applications.map {
+            RouteSource(id: $0.id, name: $0.name, processes: $0.processes, active: $0.active)
         }
-        states.removeAll(keepingCapacity: true)
-        let available = Set(devices.map(\.id))
-        for app in applications {
-            let preference = preferences[app.id] ?? AppPreference()
-            let decision = RoutingPolicy.decide(enabled: enabled, preference: preference,
-                availableUIDs: available, defaultUID: defaultUID)
-            if decision == .direct {
-                routes[app.id] = nil
-                errors[app.id] = nil
-                failedKeys[app.id] = nil
-                states[app.id] = app.active ? .direct : .inactive
-                continue
-            }
-            guard !app.processes.isEmpty else {
-                states[app.id] = .inactive
-                continue
-            }
-            let target: OutputDevice?
-            if case .render(let uid) = decision { target = devices.first { $0.id == uid } }
-            else { target = nil }
-            let key = "\(app.processes)-\(target?.id ?? "waiting")-\(target?.audioID ?? 0)"
-            if failedKeys[app.id] == key {
-                states[app.id] = .failed(errors[app.id] ?? "Audio route failed. Retry to resume.")
-                continue
-            }
-            do {
-                if routes[app.id]?.processes != app.processes {
-                    let newRoute = try AudioRoute(app: app)
-                    routes[app.id] = newRoute
-                }
-                guard let route = routes[app.id] else { continue }
-                if suspended || target == nil || !app.active {
-                    route.hold()
-                    if let cleanupError = route.cleanupError { throw EngineError.message(cleanupError) }
-                    states[app.id] = target == nil ? .waiting(preference.outputName ?? "an audio output") : .inactive
-                } else if let target {
-                    if route.deviceUID != target.id {
-                        try route.start(device: target, gain: preference.gain, queue: queue) { [weak self, weak route] in
-                            guard let self, let route, self.routes[app.id] === route else { return }
-                            route.hold()
-                            self.failedKeys[app.id] = nil
-                            self.scheduleRefresh()
-                        }
-                        lastProgress[app.id] = (0, Date())
-                    } else { route.setGain(preference.gain) }
-                    states[app.id] = .managed
-                }
-                errors[app.id] = nil
-                failedKeys[app.id] = nil
-            } catch {
-                routes[app.id]?.hold()
-                let message = error.localizedDescription
-                errors[app.id] = message
-                failedKeys[app.id] = key
-                states[app.id] = .failed(message)
-                HAL.log.error("Route failed: \(message, privacy: .public)")
-            }
-        }
+        reconciler.devices = devices.map { RouteDevice(uid: $0.id, handle: $0.audioID, name: $0.name) }
+        reconciler.defaultUID = defaultUID
+        let before = reconciler.states
+        reconciler.reconcile(now: Date())
+        logNewFailures(since: before)
         updateHealthTimer()
     }
 
     private func updateHealthTimer() {
-        let running = routes.values.contains { $0.deviceUID != nil }
-        guard running, !suspended else {
+        guard reconciler.hasRunningRoutes, !reconciler.suspended else {
             healthTimer?.cancel()
             healthTimer = nil
             return
@@ -234,33 +183,59 @@ final class EngineService: @unchecked Sendable {
     }
 
     private func checkHealth() {
-        var changed = false
-        for app in applications {
-            guard let route = routes[app.id], route.deviceUID != nil else { continue }
-            let now = Date()
-            let count = route.renderCount
-            let previous = lastProgress[app.id] ?? (count: 0, time: now)
-            if count != previous.count || !app.active { lastProgress[app.id] = (count, now) }
-            let stalled = app.active && count == previous.count && now.timeIntervalSince(previous.time) > 5
-            guard route.faultCount > 0 || stalled else { continue }
-            let uid = route.deviceUID ?? "waiting"
-            let target = devices.first { $0.id == uid }
-            let key = "\(app.processes)-\(uid)-\(target?.audioID ?? 0)"
-            let message = stalled
-                ? "No audio callbacks arrived. Check System Audio Recording permission, then retry."
-                : "The audio format changed unexpectedly. Audio is muted; retry to rebuild the route."
-            route.hold()
-            errors[app.id] = message
-            failedKeys[app.id] = key
-            states[app.id] = .failed(message)
-            HAL.log.error("\(message, privacy: .public)")
-            changed = true
+        let before = reconciler.states
+        guard reconciler.tick(now: Date()) else { return }
+        logNewFailures(since: before)
+        updateHealthTimer()
+        publish()
+    }
+
+    private func logNewFailures(since before: [String: RouteState]) {
+        for (id, state) in reconciler.states where before[id] != state {
+            if case .failed(let message) = state {
+                HAL.log.error("Route for \(id, privacy: .public) failed: \(message, privacy: .public)")
+            }
         }
-        if changed { updateHealthTimer(); publish() }
     }
 
     private func publish(error: String? = nil) {
         onSnapshot?(EngineSnapshot(applications: applications, devices: devices,
-            defaultUID: defaultUID, states: states, error: error))
+            defaultUID: defaultUID, states: reconciler.states, error: error))
     }
+}
+
+private struct HALRouteFactory: RouteFactory {
+    let queue: DispatchQueue
+
+    func makeRoute(for source: RouteSource) throws -> ManagedRoute {
+        HALRoute(route: try AudioRoute(app: AudioApplication(id: source.id, name: source.name,
+            bundleURL: nil, processes: source.processes, active: source.active)), queue: queue)
+    }
+}
+
+/// Adapts AudioRoute to the reconciler; invalidation callbacks arrive on the control queue.
+private final class HALRoute: ManagedRoute {
+    private let route: AudioRoute
+    private let queue: DispatchQueue
+
+    init(route: AudioRoute, queue: DispatchQueue) {
+        self.route = route
+        self.queue = queue
+    }
+
+    var processes: [UInt32] { route.processes }
+    var deviceUID: String? { route.deviceUID }
+    var cleanupError: String? { route.cleanupError }
+    var renderCount: UInt64 { route.renderCount }
+    var faultCount: UInt64 { route.faultCount }
+    var outputPeak: Float { route.outputPeak }
+
+    func start(device: RouteDevice, gain: Float, invalidated: @escaping () -> Void) throws {
+        try route.start(device: OutputDevice(id: device.uid, audioID: device.handle, name: device.name, symbol: ""),
+                        gain: gain, queue: queue, invalidated: invalidated)
+    }
+
+    func hold() { route.hold() }
+    func setGain(_ gain: Float) { route.setGain(gain) }
+    func setMetering(_ enabled: Bool) { route.setMetering(enabled) }
 }

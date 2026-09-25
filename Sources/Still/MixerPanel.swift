@@ -323,6 +323,9 @@ private struct MixerAppRow: View {
     let store: MixerStore
     @State private var isHovering = false
 
+    private static let percentTextWidth: CGFloat = 34
+    private static let controlSpacing: CGFloat = 10
+
     private var unavailableOutput: Bool {
         guard let uid = app.outputUID else { return false }
         return !store.devices.contains { $0.id == uid }
@@ -352,19 +355,25 @@ private struct MixerAppRow: View {
                 pinButton
             }
 
-            HStack(spacing: 10) {
-                muteButton
-                Slider(value: Binding(get: { app.volume }, set: { store.setVolume(app.id, $0) }), in: 0...1)
-                    .controlSize(.small)
-                    .accessibilityLabel("\(app.name) volume")
-                    .accessibilityValue("\(Int((app.volume * 100).rounded())) percent\(app.isMuted ? ", muted" : "")")
-                Text(percentText)
-                    .font(.system(size: 11).monospacedDigit())
-                    .foregroundStyle(.secondary)
-                    .frame(width: 34, alignment: .trailing)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: Self.controlSpacing) {
+                    muteButton
+                    Slider(value: Binding(get: { app.volume }, set: { store.setVolume(app.id, $0) }), in: 0...1)
+                        .controlSize(.small)
+                        .accessibilityLabel("\(app.name) volume")
+                        .accessibilityValue("\(Int((app.volume * 100).rounded())) percent\(app.isMuted ? ", muted" : "")")
+                    Text(percentText)
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(width: Self.percentTextWidth, alignment: .trailing)
+                }
+                .opacity(app.isMuted ? 0.5 : 1)
+                .disabled(!store.isEnabled)
+
+                if app.state == .managed && !app.isMuted {
+                    levelMeter
+                }
             }
-            .opacity(app.isMuted ? 0.5 : 1)
-            .disabled(!store.isEnabled)
 
             routeStatus
         }
@@ -407,6 +416,23 @@ private struct MixerAppRow: View {
         .foregroundStyle(.secondary)
         .accessibilityLabel("\(app.isMuted ? "Unmute" : "Mute") \(app.name)")
         .help(app.isMuted ? "Unmute" : "Mute")
+    }
+
+    /// A live output meter under the slider, shown only for rows Still is rendering.
+    /// Inset by the same fixed columns as the slider so it spans exactly the track.
+    private var levelMeter: some View {
+        let level = CGFloat(min(max(store.levels[app.id] ?? 0, 0), 1))
+        return Capsule()
+            .fill(Color.primary.opacity(0.08))
+            .overlay {
+                Capsule()
+                    .fill(Color.primary.opacity(0.32))
+                    .scaleEffect(x: level, y: 1, anchor: .leading)
+            }
+            .frame(height: 3)
+            .padding(.leading, PanelMetrics.controlColumn + Self.controlSpacing)
+            .padding(.trailing, Self.percentTextWidth + Self.controlSpacing)
+            .accessibilityHidden(true)
     }
 
     private var pinButton: some View {

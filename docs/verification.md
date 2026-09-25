@@ -51,6 +51,18 @@ the target Mac before treating a build as production-ready.
     (target average <0.5% of one core). Record process memory, callback failures, and
     incremental `coreaudiod` CPU with 1/3/5 managed apps. Run at least a 30-minute playback
     soak and confirm no rising memory use, stalls, or repeated route recreation.
+12. Idle grace: set an app to 50% and play it. Pause for about 3 seconds and resume;
+    the first syllable or beat must be audible. Pause for more than 10 seconds, resume, and
+    note whether the start is clipped (expected: a short gap, as before). Confirm that
+    Bluetooth headphones drop out of their active state after about 10 seconds of silence.
+13. Activity linger: with the panel open, stop an app and leave the panel alone. Its row
+    must leave the active list about 15 seconds later without any other audio event.
+14. Level meters: with the panel open, a controlled app shows a moving meter under its
+    slider; muted and uncontrolled apps show none. Close the panel and confirm idle CPU
+    returns to the step 11 baseline (metering stops).
+15. Automation URLs: `open "still://volume?app=Music&value=30"`, `...mute?app=Music&state=on`,
+    `...output?app=Music&device=system`, and a bad name, each from Terminal and once from
+    a Shortcuts "Open URL" action, including once while Still is not running.
 
 ## Evidence recorded during initial build
 

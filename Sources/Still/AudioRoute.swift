@@ -19,7 +19,8 @@ final class AudioRoute {
     var faultCount: UInt64 { dsp.map(StillDSPGetFaultCount) ?? 0 }
     var inputPeak: Float { dsp.map(StillDSPGetInputPeak) ?? 0 }
     var outputPeak: Float { dsp.map(StillDSPGetOutputPeak) ?? 0 }
-    func enableDiagnosticMetering() { if let dsp { StillDSPSetMetering(dsp, true) } }
+    func enableDiagnosticMetering() { setMetering(true) }
+    func setMetering(_ enabled: Bool) { if let dsp { StillDSPSetMetering(dsp, enabled) } }
 
     init(app: AudioApplication) throws {
         self.appID = app.id

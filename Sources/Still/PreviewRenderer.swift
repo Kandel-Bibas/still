@@ -38,12 +38,13 @@ enum PreviewRenderer {
             store: MixerStore(previewApps: crowdedApps, previewDevices: devices),
             appearance: .darkAqua, scheme: .dark, to: directory.appendingPathComponent("crowded.png")
         )
+        let sampleLevels: [String: Float] = ["preview.music": 0.7, "preview.safari": 0.35]
         try renderPanel(
-            store: MixerStore(previewApps: apps, previewDevices: devices),
+            store: MixerStore(previewApps: apps, previewDevices: devices, previewLevels: sampleLevels),
             appearance: .aqua, scheme: .light, to: directory.appendingPathComponent("light.png")
         )
         try renderPanel(
-            store: MixerStore(previewApps: apps, previewDevices: devices),
+            store: MixerStore(previewApps: apps, previewDevices: devices, previewLevels: sampleLevels),
             appearance: .darkAqua, scheme: .dark, to: directory.appendingPathComponent("dark.png")
         )
         try renderPanel(

@@ -13,18 +13,21 @@ final class MixerStore {
     private(set) var errorMessage: String?
     private(set) var defaultOutputName = "No output connected"
     private(set) var launchAtLogin = false
+    private(set) var levels: [String: Float] = [:]
     var showAllApps = false
     @ObservationIgnored private let engine = EngineService()
     @ObservationIgnored private var saved = SavedPreferences()
     @ObservationIgnored private var canSave = true
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var lastSnapshot: EngineSnapshot?
-    @ObservationIgnored private var lastSeen: [String: Date] = [:]
+    @ObservationIgnored private var activity = ActivityLinger()
+    @ObservationIgnored private var expiryTask: Task<Void, Never>?
     @ObservationIgnored private var icons: [String: NSImage] = [:]
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    @ObservationIgnored private var levelTimer: Timer?
     @ObservationIgnored private let settingsURL: URL
 
-    init(previewApps: [MixerApp], previewDevices: [OutputDevice], enabled: Bool = true) {
+    init(previewApps: [MixerApp], previewDevices: [OutputDevice], enabled: Bool = true, previewLevels: [String: Float] = [:]) {
         settingsURL = FileManager.default.temporaryDirectory.appendingPathComponent("Still-preview-unused.json")
         canSave = false
         apps = previewApps
@@ -32,6 +35,7 @@ final class MixerStore {
         isEnabled = enabled
         isLoading = false
         defaultOutputName = previewDevices.first?.name ?? "No output connected"
+        levels = previewLevels
     }
 
     init() {
@@ -77,6 +81,27 @@ final class MixerStore {
     func retry(_ id: String) { engine.retry(id) }
     func refresh() { engine.refresh() }
     func dismissError() { errorMessage = nil }
+    func reportError(_ message: String) { errorMessage = message }
+
+    /// Metering and level polling only run while the panel is open, so the audio
+    /// engine isn't asked to measure output no one can see.
+    func setPanelVisible(_ visible: Bool) {
+        levelTimer?.invalidate()
+        levelTimer = nil
+        engine.setMetering(visible)
+        guard visible else {
+            levels = [:]
+            return
+        }
+        let timer = Timer(timeInterval: 1.0 / 15.0, repeats: true) { [weak self] _ in
+            self?.engine.readLevels { [weak self] peaks in
+                Task { @MainActor [weak self] in self?.applyLevels(peaks) }
+            }
+        }
+        // Common modes keep the meters moving while a slider is being dragged.
+        RunLoop.main.add(timer, forMode: .common)
+        levelTimer = timer
+    }
 
     func setLaunchAtLogin(_ enabled: Bool) {
         do {
@@ -89,6 +114,9 @@ final class MixerStore {
 
     func shutdown() {
         saveTask?.cancel()
+        expiryTask?.cancel()
+        levelTimer?.invalidate()
+        levelTimer = nil
         persist()
         engine.stop()
         for observer in observers { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
@@ -115,14 +143,13 @@ final class MixerStore {
         if let error = snapshot.error { errorMessage = error }
         let now = Date()
         var rows: [MixerApp] = snapshot.applications.map { source in
-            if source.active { lastSeen[source.id] = now }
             let preference = saved.applications[source.id] ?? AppPreference()
             if icons[source.id] == nil, let url = source.bundleURL {
                 icons[source.id] = NSWorkspace.shared.icon(forFile: url.path)
             }
             return MixerApp(id: source.id, name: source.name, icon: icons[source.id], bundleURL: source.bundleURL,
                 processes: source.processes,
-                isActive: source.active || now.timeIntervalSince(lastSeen[source.id] ?? .distantPast) < 15,
+                isActive: activity.observe(source.id, active: source.active, now: now),
                 volume: preference.volume, isMuted: preference.muted, isPinned: preference.pinned,
                 outputUID: preference.outputUID, outputName: preference.outputName,
                 state: snapshot.states[source.id] ?? .inactive)
@@ -137,6 +164,31 @@ final class MixerStore {
         }
         apps = rows.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         isLoading = false
+        scheduleActivityExpiry(after: now)
+    }
+
+    /// Snapshots only arrive on audio events, so an app that stopped playing would stay
+    /// listed as active until some unrelated event. Re-evaluate when its linger ends.
+    private func scheduleActivityExpiry(after now: Date) {
+        expiryTask?.cancel()
+        guard let expiry = activity.nextExpiry(after: now) else { return }
+        expiryTask = Task { [weak self] in
+            do { try await Task.sleep(for: .seconds(expiry.timeIntervalSince(now))) }
+            catch { return }
+            guard let self, let snapshot = self.lastSnapshot else { return }
+            self.receive(snapshot)
+        }
+    }
+
+    /// Folds newly read peaks through `LevelMeter` so the bar decays smoothly between
+    /// samples, and drops any entry that reaches 0 rather than keeping it around silent.
+    private func applyLevels(_ peaks: [String: Float]) {
+        var next: [String: Float] = [:]
+        for id in Set(levels.keys).union(peaks.keys) {
+            let display = LevelMeter.display(peak: peaks[id] ?? 0, previous: levels[id] ?? 0)
+            if display > 0 { next[id] = display }
+        }
+        levels = next
     }
 
     private func scheduleSave() {
