@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Still: every app gets its own volume</title>
+<meta name="description" content="Still is a free, open-source macOS menu bar mixer: its own volume, mute and output device for every app. Try it right here, with sound.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="assets/icon-256.png">
+<link rel="apple-touch-icon" href="assets/icon-256.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://still.bibas.dev/">
+<meta property="og:title" content="Still: every app gets its own volume">
+<meta property="og:description" content="A free macOS menu bar mixer. Turn one app down, send music to your headphones, keep the call on the speakers. Try it with sound.">
+<meta property="og:image" content="https://still.bibas.dev/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/panel.css">
+<link rel="stylesheet" href="css/desktop.css">
+<link rel="stylesheet" href="css/sections.css">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Every app gets its own volume</span><span>Music in your headphones, the call on the speakers</span><span>No driver, no helper, no restart</span><span>Free and MIT licensed</span><span>macOS 14.2 and later</span>
+    <span>Every app gets its own volume</span><span>Music in your headphones, the call on the speakers</span><span>No driver, no helper, no restart</span><span>Free and MIT licensed</span><span>macOS 14.2 and later</span>
+  </div>
+</div>
+
+<div class="page">
+  <header class="nav">
+    <a class="logo" href="#top" aria-label="Still, back to top">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 7v18M16 7v18M23 7v18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="5.5" y="16.5" width="7" height="4.5" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.6"/><rect x="12.5" y="9" width="7" height="4.5" rx="2" fill="#fb4903" stroke="currentColor" stroke-width="1.6"/><rect x="19.5" y="13.5" width="7" height="4.5" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.6"/></svg>
+    </a>
+    <nav class="pills" aria-label="Sections">
+      <a class="pill" href="#try">Try it</a>
+      <a class="pill" href="#features">Features</a>
+      <a class="pill" href="#how">How it works</a>
+      <a class="pill" href="#scripting">Scripting</a>
+    </nav>
+    <button class="pill round" id="sound-toggle" type="button" aria-pressed="false" aria-label="Turn sound on">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-off"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-on"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <a class="pill solid" href="#install">Get Still</a>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <canvas class="tube" id="hero-tube" aria-hidden="true"></canvas>
+      <canvas class="tube front" id="hero-tube-front" aria-hidden="true"></canvas>
+      <div class="hero-inner">
+        <h1 id="hero-title" class="wordmark">
+          <span class="visually-hidden">Still. </span><span class="letters" aria-hidden="true"><i>S</i><i>t</i><i>i</i><i>l</i><i>l</i></span>
+          <svg class="sticker s-headphones" data-sticker aria-hidden="true"><use href="assets/stickers.svg#headphones"/></svg>
+          <svg class="sticker s-speaker" data-sticker aria-hidden="true"><use href="assets/stickers.svg#speaker"/></svg>
+          <svg class="sticker s-knob" data-sticker aria-hidden="true"><use href="assets/stickers.svg#knob"/></svg>
+          <svg class="sticker s-cassette" data-sticker aria-hidden="true"><use href="assets/stickers.svg#cassette"/></svg>
+          <svg class="sticker s-bell" data-sticker aria-hidden="true"><use href="assets/stickers.svg#bell-off"/></svg>
+        </h1>
+        <p class="tagline">Every app gets its own volume.</p>
+        <p class="sub">A tiny menu bar mixer for your Mac. Turn one noisy app down, send music to your headphones, keep the call on the speakers.</p>
+        <div class="cta">
+          <a class="pill solid big" href="#try">Try it with sound</a>
+          <a class="pill big" href="https://github.com/Kandel-Bibas/still">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Get it on GitHub
+          </a>
+        </div>
+        <p class="meta">Free · MIT licensed · macOS 14.2+</p>
+      </div>
+    </section>
+
+    <section class="try" id="try" aria-labelledby="try-title">
+      <div class="try-head">
+        <h2 id="try-title" class="display">A Mac you can hear.</h2>
+        <p>Four apps, all talking at once. The music is too loud, the chat won't stop pinging, and there's a meeting on. Click the sliders icon in the menu bar and fix it, one app at a time.</p>
+      </div>
+      <div id="mac-demo"></div>
+    </section>
+
+    <!-- SECTIONS:START -->
+    <section class="features band" id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <h2 id="features-title" class="display">Small app.<br>Big quiet.</h2>
+        <div class="bento">
+          <article class="card card-sun pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#knob"/></svg>
+            <h3>Per-app volume</h3>
+            <p>Every app gets its own 0–100% slider, plus a separate mute that remembers where the slider was.</p>
+          </article>
+          <article class="card card-lavender pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#airpods"/></svg>
+            <h3>Send any app anywhere</h3>
+            <p>Pick an output for each app, or leave it following the system. Headphones for music, speakers for the call.</p>
+          </article>
+          <article class="card card-mint pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#headphones"/></svg>
+            <h3>Waits for your headphones</h3>
+            <p>Unplug the device an app is routed to and Still keeps it muted and waiting, instead of dumping it onto your speakers.</p>
+          </article>
+          <article class="card card-white pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#waveform"/></svg>
+            <h3>Live levels</h3>
+            <p>A meter under each slider shows what's actually coming out of the app, only while the panel is open.</p>
+          </article>
+          <article class="card card-ember pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#star"/></svg>
+            <h3>Favorites that remember</h3>
+            <p>Pin an app and its volume, mute, and output are all saved per app for next time.</p>
+          </article>
+          <article class="card card-white pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#check"/></svg>
+            <h3>Gives everything back</h3>
+            <p>Switch Still off, or quit it, and every app gets its original volume and output back.</p>
+          </article>
+          <article class="card card-sky pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#box"/></svg>
+            <h3>Nothing to install</h3>
+            <p>No audio driver, no kernel extension, no privileged helper. Still is a single app.</p>
+          </article>
+          <article class="card card-violet pop-in">
+            <svg class="card-icon" aria-hidden="true"><use href="assets/stickers.svg#cassette"/></svg>
+            <h3>Private by design</h3>
+            <p>Audio is processed on your Mac, in memory. Nothing is recorded, and nothing is sent anywhere.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how band" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <h2 id="how-title" class="display">No driver. No helper.<br>Just an app.</h2>
+        <div class="pipeline">
+          <svg class="pipeline-tube pipeline-tube-h" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="tubeGradH" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#8cc4ff"/>
+                <stop offset="1" stop-color="#4da2ff"/>
+              </linearGradient>
+            </defs>
+            <path d="M40,60 C160,92 240,28 360,60 C480,92 560,28 680,60 C760,82 840,38 960,60" fill="none" stroke="#2f86f0" stroke-width="26" stroke-linecap="round"/>
+            <path d="M40,60 C160,92 240,28 360,60 C480,92 560,28 680,60 C760,82 840,38 960,60" fill="none" stroke="url(#tubeGradH)" stroke-width="18" stroke-linecap="round"/>
+            <path d="M40,54 C160,86 240,22 360,54 C480,86 560,22 680,54 C760,76 840,32 960,54" fill="none" stroke="#e4f3ff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+          <svg class="pipeline-tube pipeline-tube-v" viewBox="0 0 120 1000" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="tubeGradV" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#8cc4ff"/>
+                <stop offset="1" stop-color="#4da2ff"/>
+              </linearGradient>
+            </defs>
+            <path d="M60,40 C92,160 28,240 60,360 C92,480 28,560 60,680 C82,760 38,840 60,960" fill="none" stroke="#2f86f0" stroke-width="26" stroke-linecap="round"/>
+            <path d="M60,40 C92,160 28,240 60,360 C92,480 28,560 60,680 C82,760 38,840 60,960" fill="none" stroke="url(#tubeGradV)" stroke-width="18" stroke-linecap="round"/>
+            <path d="M54,40 C86,160 22,240 54,360 C86,480 22,560 54,680 C76,760 32,840 54,960" fill="none" stroke="#e4f3ff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+          </svg>
+          <div class="pipeline-row">
+            <div class="node pop-in">
+              <div class="node-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#app-music"/></svg><span class="node-num">1</span></div>
+              <p>The app plays</p>
+            </div>
+            <div class="node pop-in">
+              <div class="node-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#bell-off"/></svg><span class="node-num">2</span></div>
+              <p>A private tap captures it and mutes the original</p>
+            </div>
+            <div class="node pop-in">
+              <div class="node-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#knob"/></svg><span class="node-num">3</span></div>
+              <p>One tiny C++ callback applies your volume with a 5 ms ramp</p>
+            </div>
+            <div class="node pop-in">
+              <div class="node-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#interface"/></svg><span class="node-num">4</span></div>
+              <p>A private aggregate device</p>
+            </div>
+            <div class="node pop-in">
+              <div class="node-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#speaker"/></svg><span class="node-num">5</span></div>
+              <p>Your chosen output</p>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="pop-in">
+            <div class="stat-num">0</div>
+            <div class="stat-label">drivers or helpers installed</div>
+          </div>
+          <div class="pop-in">
+            <div class="stat-num">5 ms</div>
+            <div class="stat-label">gain ramp, so changes never click</div>
+          </div>
+          <div class="pop-in">
+            <div class="stat-num">0.04%</div>
+            <div class="stat-label">of one CPU core while idle, measured</div>
+          </div>
+          <div class="pop-in">
+            <div class="stat-num">0 bytes</div>
+            <div class="stat-label">of audio written to disk or sent anywhere</div>
+          </div>
+        </div>
+        <p class="how-note">Apps you haven't touched get no tap at all. Still costs nothing until you use it.</p>
+      </div>
+    </section>
+
+    <section class="scripting band" id="scripting" aria-labelledby="scripting-title">
+      <svg class="sticker scripting-float" data-sticker aria-hidden="true"><use href="assets/stickers.svg#note"/></svg>
+      <div class="wrap">
+        <h2 id="scripting-title" class="display">Script it.</h2>
+        <p class="lede">Still answers <code>still://</code> links, so Shortcuts, Raycast, or a shell script can drive it. No App Intents required.</p>
+        <div class="scripting-grid">
+          <div class="terminal pop-in" id="term">
+            <div class="term-line" data-term>
+              <span class="term-prompt">$</span>
+              <code class="term-cmd">open "still://volume?app=Pings&amp;value=15"</code>
+              <button type="button" class="term-run" data-run-url="still://volume?app=Pings&amp;value=15">Run</button>
+              <div class="term-output" data-output aria-live="polite"></div>
+            </div>
+            <div class="term-line" data-term>
+              <span class="term-prompt">$</span>
+              <code class="term-cmd">open "still://mute?app=Calls&amp;state=toggle"</code>
+              <button type="button" class="term-run" data-run-url="still://mute?app=Calls&amp;state=toggle">Run</button>
+              <div class="term-output" data-output aria-live="polite"></div>
+            </div>
+            <div class="term-line" data-term>
+              <span class="term-prompt">$</span>
+              <code class="term-cmd">open "still://output?app=Music&amp;device=AirPods%20Pro"</code>
+              <button type="button" class="term-run" data-run-url="still://output?app=Music&amp;device=AirPods%20Pro">Run</button>
+              <div class="term-output" data-output aria-live="polite"></div>
+            </div>
+            <div class="term-line" data-term>
+              <span class="term-prompt">$</span>
+              <code class="term-cmd">open "still://output?app=Music&amp;device=system"</code>
+              <button type="button" class="term-run" data-run-url="still://output?app=Music&amp;device=system">Run</button>
+              <div class="term-output" data-output aria-live="polite"></div>
+            </div>
+            <div class="term-line" data-term>
+              <span class="term-prompt">$</span>
+              <code class="term-cmd">open "still://volume?app=Music&amp;value=250"</code>
+              <button type="button" class="term-run" data-run-url="still://volume?app=Music&amp;value=250">Run</button>
+              <div class="term-output" data-output aria-live="polite"></div>
+            </div>
+            <div class="term-line term-input-line">
+              <span class="term-prompt">$</span>
+              <input type="text" id="term-custom-input" placeholder='open &quot;still://volume?app=Music&amp;value=50&quot;' aria-label="Type a still:// URL and press Enter to run it">
+            </div>
+            <div class="term-output" id="term-custom-output" aria-live="polite"></div>
+          </div>
+          <div class="mixer-card card pop-in">
+            <h3 class="mixer-title">Mini mixer</h3>
+            <div class="mixer-faders" id="mixer-faders" role="img" aria-label="Live mixer levels">
+              <div class="fader" data-app="music">
+                <div class="fader-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#app-music"/></svg></div>
+                <div class="fader-track-wrap">
+                  <div class="fader-track"><div class="fader-fill" data-fill></div></div>
+                  <div class="fader-meter"><div class="fader-meter-fill" data-meter></div></div>
+                </div>
+                <div class="fader-pct" data-pct>0%</div>
+              </div>
+              <div class="fader" data-app="browser">
+                <div class="fader-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#app-browser"/></svg></div>
+                <div class="fader-track-wrap">
+                  <div class="fader-track"><div class="fader-fill" data-fill></div></div>
+                  <div class="fader-meter"><div class="fader-meter-fill" data-meter></div></div>
+                </div>
+                <div class="fader-pct" data-pct>0%</div>
+              </div>
+              <div class="fader" data-app="calls">
+                <div class="fader-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#app-calls"/></svg></div>
+                <div class="fader-track-wrap">
+                  <div class="fader-track"><div class="fader-fill" data-fill></div></div>
+                  <div class="fader-meter"><div class="fader-meter-fill" data-meter></div></div>
+                </div>
+                <div class="fader-pct" data-pct>0%</div>
+              </div>
+              <div class="fader" data-app="pings">
+                <div class="fader-icon"><svg aria-hidden="true"><use href="assets/stickers.svg#app-pings"/></svg></div>
+                <div class="fader-track-wrap">
+                  <div class="fader-track"><div class="fader-fill" data-fill></div></div>
+                  <div class="fader-meter"><div class="fader-meter-fill" data-meter></div></div>
+                </div>
+                <div class="fader-pct" data-pct>0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="install band" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <h2 id="install-title" class="display">Get Still.</h2>
+        <div class="install-grid">
+          <div class="code-card pop-in">
+            <button type="button" class="copy-btn" id="copy-install">Copy</button>
+            <ol>
+              <li>git clone https://github.com/Kandel-Bibas/still.git</li>
+              <li>cd still</li>
+              <li>bash scripts/build.sh</li>
+              <li>cp -R dist/Still.app /Applications/</li>
+              <li>open /Applications/Still.app</li>
+            </ol>
+          </div>
+          <div class="notes">
+            <div class="note-card card pop-in">
+              <svg aria-hidden="true"><use href="assets/stickers.svg#check"/></svg>
+              <p>Needs macOS 14.2+ and Xcode 16+ (Swift 6) to build it.</p>
+            </div>
+            <div class="note-card card pop-in">
+              <svg aria-hidden="true"><use href="assets/stickers.svg#note"/></svg>
+              <p>Not notarized yet, so macOS will warn the first time. Right-click the app and choose Open.</p>
+            </div>
+            <div class="note-card card pop-in">
+              <svg aria-hidden="true"><use href="assets/stickers.svg#speaker"/></svg>
+              <p>macOS asks for System Audio Recording permission the first time you change an app, and shows its recording indicator while Still controls it.</p>
+            </div>
+          </div>
+        </div>
+        <div class="install-cta">
+          <a class="pill-cta" href="https://github.com/Kandel-Bibas/still">
+            <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Star it on GitHub
+          </a>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Why the recording indicator?</summary>
+            <p>macOS shows it whenever an app holds a live audio tap, the same indicator any recording app would trigger. It's the system telling you an app can be heard, not Still recording anything.</p>
+          </details>
+          <details>
+            <summary>Bluetooth and AirPlay?</summary>
+            <p>Yes. Still can send an app to any output macOS offers. Reconnecting after sleep or a Bluetooth drop can cause a brief gap.</p>
+          </details>
+          <details>
+            <summary>Individual browser tabs?</summary>
+            <p>Not yet. A browser's helper processes are grouped under the browser itself, so every tab shares one row.</p>
+          </details>
+          <details>
+            <summary>Boost above 100%?</summary>
+            <p>No. 100% leaves an app's own audio path completely untouched. Still never adds gain beyond that.</p>
+          </details>
+          <details>
+            <summary>Intel Macs?</summary>
+            <p>Still is developed on Apple silicon. It hasn't been tested on Intel hardware.</p>
+          </details>
+          <details>
+            <summary>Is it free?</summary>
+            <p>Yes. Still is free and MIT licensed. The source is on GitHub.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <!-- SECTIONS:END -->
+  </main>
+
+  <footer class="footer" aria-labelledby="footer-mark">
+    <canvas class="tube" id="footer-tube" aria-hidden="true"></canvas>
+    <p id="footer-mark" class="footer-mark" aria-label="Still">Still</p>
+    <div class="footer-row">
+      <nav aria-label="Footer">
+        <a class="pill" href="https://github.com/Kandel-Bibas/still">Source</a>
+        <a class="pill" href="https://github.com/Kandel-Bibas/still/blob/main/LICENSE">MIT License</a>
+        <a class="pill" href="https://bibas.dev">Made with love by Bibas and Claude</a>
+      </nav>
+      <p class="fine">Design inspired by <a href="https://slush.app">Slush</a>. The sounds on this page are synthesised live in your browser, and the output devices are simulated.</p>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

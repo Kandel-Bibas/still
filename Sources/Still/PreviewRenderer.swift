@@ -61,6 +61,10 @@ enum PreviewRenderer {
             store: MixerStore(previewApps: waitingApps, previewDevices: [devices[0]]),
             appearance: .aqua, scheme: .light, to: directory.appendingPathComponent("waiting.png")
         )
+        try renderPanel(
+            store: MixerStore(previewApps: waitingApps, previewDevices: [devices[0]]),
+            appearance: .darkAqua, scheme: .dark, to: directory.appendingPathComponent("waiting-dark.png")
+        )
     }
 
     private static func renderPanel(

@@ -1,0 +1,368 @@
+/* The interactive macOS desktop centrepiece. Scoped entirely under .mac-stage / .mac. */
+
+.mac-stage {
+  --md-navy: #0b1230;
+  --md-navy2: #141b46;
+  --md-navy3: #1c2566;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 28px;
+  padding: 8px 0 32px;
+  font-family: var(--ui);
+}
+
+/* ---------------------------------------------------------------------- laptop + bezel */
+.mac-laptop { --scale: 1; width: 100%; }
+.mac-bezel {
+  position: relative;
+  width: calc(1312px * var(--scale));
+  height: calc(838px * var(--scale));
+  margin: 0 auto;
+  background: #0e0e10;
+  border-radius: calc(26px * var(--scale));
+  border: 1px solid #000;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, .35);
+  overflow: hidden;
+}
+.mac-scale-wrap {
+  position: absolute; top: calc(22px * var(--scale)); left: calc(16px * var(--scale));
+  width: 1280px; height: 800px;
+  transform: scale(var(--scale)); transform-origin: top left;
+  border-radius: 8px; overflow: hidden;
+}
+.mac-hinge { height: 10px; margin: 0 auto; width: 82%; max-width: 940px; background: linear-gradient(180deg, #cfcfd4, #9a9aa1); border-radius: 0 0 4px 4px; }
+.mac-base { height: 14px; margin: 0 auto; width: 92%; max-width: 1040px; background: linear-gradient(180deg, #e4e4e8, #b6b6bd); border-radius: 0 0 12px 12px; box-shadow: 0 6px 14px rgba(0, 0, 0, .25); }
+
+/* ---------------------------------------------------------------------- the screen itself */
+.mac {
+  position: relative;
+  width: 1280px; height: 800px;
+  overflow: hidden;
+  font: 13px/1.3 var(--mac);
+  color: #000;
+  background: #cfe0f2;
+  --win-bg: #fbfbfd;
+  --win-border: rgba(0, 0, 0, .82);
+  --win-text: #111;
+  --win-sub: #55555c;
+  --bar-bg: rgba(255, 255, 255, .6);
+  --bar-text: #0c0c0e;
+  --bar-border: rgba(0, 0, 0, .12);
+}
+.mac[data-appearance="dark"] {
+  color: #f2f2f5;
+  --win-bg: #232327;
+  --win-border: rgba(255, 255, 255, .16);
+  --win-text: #f1f1f4;
+  --win-sub: #9d9da6;
+  --bar-bg: rgba(28, 28, 32, .55);
+  --bar-text: #f4f4f7;
+  --bar-border: rgba(255, 255, 255, .12);
+}
+
+/* Camera notch: sits on top of the menu bar so it reads as cut into the screen. */
+.mac-notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 150px; height: 24px; background: #0e0e10;
+  border-radius: 0 0 12px 12px; z-index: 51;
+}
+
+/* ---------------------------------------------------------------------- wallpaper */
+.mac-wallpaper { position: absolute; inset: 0; z-index: 0; }
+.mac-wave-svg { width: 100%; height: 100%; display: block; }
+.mac-wave-back { fill: var(--sky); }
+.mac-wave-mid { fill: var(--lavender); }
+.mac-wave-front { fill: var(--blue); }
+.mac-wave-main { transition: transform .05s linear; }
+.mac[data-appearance="dark"] .mac-wallpaper { background: var(--md-navy); }
+.mac[data-appearance="dark"] .mac-wave-back { fill: var(--md-navy2); }
+.mac[data-appearance="dark"] .mac-wave-mid { fill: var(--md-navy3); }
+.mac[data-appearance="dark"] .mac-wave-front { fill: var(--violet); }
+
+/* ---------------------------------------------------------------------- menu bar */
+.mac-menubar {
+  position: absolute; top: 0; left: 0; right: 0; height: 24px; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px 0 10px;
+  background: var(--bar-bg); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border-bottom: 1px solid var(--bar-border);
+  color: var(--bar-text);
+  font-size: 13px;
+}
+.mac-menubar-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.mac-apple { display: flex; width: 15px; height: 15px; }
+.mac-apple svg { width: 100%; height: 100%; }
+.mac-menubar-appname { font-weight: 700; white-space: nowrap; margin-right: 2px; }
+.mac-menu { position: relative; }
+.mac-menu-item { background: none; border: none; padding: 3px 2px; cursor: default; color: inherit; font: inherit; border-radius: 3px; }
+.mac-menu-item[aria-expanded="true"] { background: rgba(77, 162, 255, .55); color: #fff; }
+.mac-menu-dropdown {
+  display: none; position: absolute; top: 22px; left: 0; min-width: 190px;
+  background: var(--win-bg); border: 1px solid rgba(0, 0, 0, .2); border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .28); padding: 5px; z-index: 60; color: var(--win-text);
+}
+.mac-menu-dropdown.is-open { display: block; }
+.mac-menu-entry { padding: 4px 10px; border-radius: 4px; font-size: 13px; opacity: .38; }
+.mac-menu-sep { height: 1px; margin: 4px 6px; background: var(--bar-border); }
+.mac-menubar-right { display: flex; align-items: center; gap: 13px; }
+.mac-status { display: flex; align-items: center; gap: 4px; background: none; border: none; color: inherit; padding: 2px 6px; border-radius: 5px; cursor: default; }
+.mac-status svg { width: 17px; height: 17px; display: block; }
+button.mac-status { cursor: pointer; }
+button.mac-status:hover { background: rgba(120, 120, 128, .16); }
+.mac-status-still.is-open, .mac-status-cc[aria-expanded="true"] { background: rgba(77, 162, 255, .6); color: #fff; }
+.mac-status-still.is-dim { opacity: .5; }
+.mac-status-battery { gap: 3px; }
+.mac-battery-pct { font-size: 12px; }
+.mac-clock { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------------------------------------------------------------------- control center */
+.mac-controlcenter {
+  display: none; position: absolute; top: 30px; right: 12px; z-index: 55;
+  width: 260px; padding: 12px; border-radius: 16px;
+  background: var(--win-bg); border: 1px solid var(--win-border); color: var(--win-text);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, .3);
+}
+.mac-controlcenter.is-open { display: block; }
+.mac-cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.mac-cc-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  padding: 10px; border-radius: 12px; background: rgba(120, 120, 128, .12);
+  border: 1px solid transparent; cursor: pointer; color: var(--win-text); font: 600 12px var(--ui);
+}
+.mac-cc-tile svg { width: 20px; height: 20px; }
+.mac-cc-tile.is-active { background: var(--blue); color: #fff; }
+.mac-cc-sound, .mac-cc-outputs { padding: 10px; border-radius: 12px; background: rgba(120, 120, 128, .12); margin-bottom: 8px; }
+.mac-cc-sound-label { display: block; font: 600 12px var(--ui); margin-bottom: 6px; }
+.mac-cc-sound input[type="range"] { width: 100%; accent-color: var(--blue); }
+.mac-cc-outputs { display: flex; flex-direction: column; gap: 2px; margin-bottom: 0; }
+.mac-cc-output { display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 6px 4px; border-radius: 8px; text-align: left; font: 500 13px var(--ui); color: var(--win-text); cursor: pointer; }
+.mac-cc-output:hover { background: rgba(120, 120, 128, .16); }
+.mac-cc-output-check { width: 16px; height: 16px; flex: none; }
+.mac-cc-output-check svg { width: 100%; height: 100%; }
+.mac-cc-output.is-active { font-weight: 700; }
+
+/* ---------------------------------------------------------------------- windows */
+.mac-windows-layer { position: absolute; inset: 0; z-index: 10; }
+.mac-window {
+  position: absolute; display: flex; flex-direction: column;
+  background: var(--win-bg); color: var(--win-text);
+  border: 1px solid var(--win-border); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .32);
+  transition: opacity .18s ease;
+}
+.mac-window.is-hidden { display: none; }
+.mac-window-titlebar {
+  position: relative; height: 30px; flex: none; display: flex; align-items: center; justify-content: center;
+  background: rgba(120, 120, 128, .14); border-bottom: 1px solid var(--bar-border); cursor: grab; touch-action: none;
+}
+.mac-window-titlebar:active { cursor: grabbing; }
+.mac-traffic { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 7px; }
+.mac-traffic button { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); padding: 0; cursor: pointer; }
+.mac-traffic-red { background: var(--ember); }
+.mac-traffic-yellow { background: var(--sun); }
+.mac-traffic-green { background: var(--mint); }
+.mac-window-title { font: 600 12.5px var(--ui); color: var(--win-sub); }
+.mac-window-body { flex: 1; min-height: 0; overflow: hidden; }
+
+.mac-window.is-wiggle { animation: mac-wiggle .32s ease; }
+@keyframes mac-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-1.1deg) scale(1.006); } 75% { transform: rotate(1.1deg) scale(1.006); } }
+.mac-window.is-genie { animation: mac-genie .34s cubic-bezier(.5, 0, .8, .4) forwards; transform-origin: top center; }
+@keyframes mac-genie { to { transform: translate(var(--gx), var(--gy)) scale(.04); opacity: .15; } }
+.mac-window.is-bounce-in { animation: mac-bounce-in .38s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes mac-bounce-in { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+
+/* ---- music ---- */
+.mac-music { display: flex; gap: 16px; padding: 16px; height: 100%; }
+.mac-music-art { width: 96px; height: 96px; flex: none; border-radius: 10px; border: 1px solid var(--win-border); display: grid; place-items: center; }
+.mac-music-art svg { width: 62px; height: 62px; }
+.mac-music-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mac-music-title { font: 700 15px var(--ui); }
+.mac-music-subtitle { font: 500 12px var(--ui); color: var(--win-sub); margin-bottom: 10px; }
+.mac-music-bars { flex: 1; display: flex; align-items: flex-end; gap: 3px; min-height: 56px; }
+.mac-music-bars .bar { flex: 1; background: var(--ember); border-radius: 2px 2px 0 0; height: 10%; transition: height .05s linear; }
+.mac[data-appearance="dark"] .mac-music-bars .bar { background: var(--sun); }
+.mac-music-transport { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.mac-music-play { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 1px solid var(--win-border); background: none; color: var(--win-text); display: grid; place-items: center; cursor: pointer; }
+.mac-music-play svg { width: 15px; height: 15px; }
+.mac-music-play .ic-pause { display: none; }
+.mac-music-play.is-playing .ic-play { display: none; }
+.mac-music-play.is-playing .ic-pause { display: block; }
+.mac-music-progress { flex: 1; height: 4px; border-radius: 2px; background: rgba(120, 120, 128, .3); overflow: hidden; }
+.mac-music-progress-fill { height: 100%; width: 18%; background: var(--ember); }
+.mac[data-appearance="dark"] .mac-music-progress-fill { background: var(--sun); }
+.mac-music-time { font: 500 11px var(--ui); color: var(--win-sub); white-space: nowrap; }
+
+/* ---- browser ---- */
+.mac-browser { display: flex; flex-direction: column; height: 100%; }
+.mac-browser-tabs { display: flex; padding: 6px 8px 0; gap: 4px; }
+.mac-browser-tab { padding: 5px 12px; border-radius: 8px 8px 0 0; background: rgba(120, 120, 128, .14); font: 600 11.5px var(--ui); }
+.mac-browser-tab.is-active { background: var(--win-bg); border: 1px solid var(--bar-border); border-bottom: none; }
+.mac-browser-urlbar { margin: 0 8px 8px; padding: 5px 10px; border-radius: 7px; background: rgba(120, 120, 128, .14); font: 500 11.5px var(--mono); color: var(--win-sub); }
+.mac-browser-video { position: relative; flex: 1; margin: 0 8px 8px; border-radius: 8px; overflow: hidden; background: #2d3f52; display: grid; place-items: center; }
+.mac-rain-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mac-browser-play {
+  position: relative; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .7);
+  background: rgba(0, 0, 0, .35); color: #fff; display: grid; place-items: center; cursor: pointer;
+}
+.mac-browser-play svg { width: 22px; height: 22px; }
+.mac-browser-play .ic-pause { display: none; }
+.mac-browser-play.is-playing .ic-play { display: none; }
+.mac-browser-play.is-playing .ic-pause { display: block; }
+
+/* ---- calls ---- */
+.mac-calls { display: flex; flex-direction: column; height: 100%; padding: 14px; }
+.mac-calls-title { font: 700 14px var(--ui); margin-bottom: 10px; }
+.mac-calls-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mac-call-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--win-border); border-radius: 10px; padding: 10px 6px;
+  background: rgba(120, 120, 128, .08);
+}
+.mac-call-tile.is-speaking { border: 3px solid var(--mint); padding: 8px 4px; }
+.mac-call-avatar { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: 700 14px var(--ui); color: #101014; border: 1px solid var(--win-border); }
+.mac-call-name { font: 600 11.5px var(--ui); color: var(--win-sub); }
+.mac-call-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; visibility: hidden; }
+.mac-call-tile.is-speaking .mac-call-bars { visibility: visible; }
+.mac-call-bar { width: 3px; height: 30%; background: var(--mint); border-radius: 1px; }
+.mac-calls-toolbar { display: flex; align-items: center; gap: 10px; margin-top: 12px; justify-content: center; }
+.mac-calls-deco { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--win-border); background: rgba(120, 120, 128, .1); color: var(--win-text); display: grid; place-items: center; cursor: pointer; }
+.mac-calls-deco svg { width: 16px; height: 16px; }
+.mac-call-leave { padding: 7px 18px; border-radius: 999px; border: 1px solid var(--win-border); background: var(--ember); color: #fff; font: 700 12px var(--ui); cursor: pointer; }
+
+/* ---- pings ---- */
+.mac-pings { display: flex; flex-direction: column; height: 100%; }
+.mac-pings-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.mac-chat-msg { max-width: 82%; padding: 7px 10px; border-radius: 12px; border: 1px solid var(--win-border); background: rgba(120, 120, 128, .1); font-size: 12.5px; }
+.mac-chat-from { display: block; font-weight: 700; font-size: 11px; margin-bottom: 2px; color: var(--win-sub); }
+
+/* ---------------------------------------------------------------------- dock */
+.mac-dock {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 40;
+  display: flex; align-items: flex-end; gap: 8px; padding: 7px 10px;
+  background: var(--bar-bg); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid var(--bar-border); border-radius: 16px;
+}
+.mac-dock-icon {
+  position: relative; width: 44px; height: 44px; flex: none; border: none; background: none; padding: 0; cursor: pointer;
+  transition: transform .12s ease-out;
+}
+.mac-dock-icon svg { width: 100%; height: 100%; display: block; }
+.mac-dock-finder, .mac-dock-trash { cursor: default; }
+.mac-dock-trash { display: grid; place-items: center; color: var(--bar-text); }
+.mac-dock-trash svg { width: 26px; height: 26px; }
+.mac-dock-dot { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+.mac-dock-dot.is-on { background: var(--bar-text); opacity: .55; }
+.mac-dock-sep { width: 1px; align-self: stretch; margin: 2px 2px; background: var(--bar-border); }
+
+/* ---------------------------------------------------------------------- notifications */
+.mac-notifications { position: absolute; top: 30px; right: 12px; z-index: 80; display: flex; flex-direction: column; gap: 8px; width: 300px; pointer-events: none; }
+.mac-notification {
+  pointer-events: auto; display: flex; gap: 10px; padding: 10px 12px; border-radius: 12px;
+  background: var(--win-bg); color: var(--win-text); border: 1px solid var(--win-border);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, .28); cursor: pointer;
+  animation: mac-notif-in .28s cubic-bezier(.2, .9, .3, 1);
+}
+.mac-notification.is-leaving { animation: mac-notif-out .22s ease forwards; }
+@keyframes mac-notif-in { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes mac-notif-out { to { transform: translateX(30px); opacity: 0; } }
+.mac-notification-icon { width: 30px; height: 30px; flex: none; }
+.mac-notification-body { min-width: 0; }
+.mac-notification-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.mac-notification-top span { color: var(--win-sub); }
+.mac-notification-text { font-size: 12.5px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* ---------------------------------------------------------------------- still panel host */
+.mac-panel-host { position: absolute; top: 24px; right: 10px; z-index: 90; }
+
+/* ---------------------------------------------------------------------- sound gate */
+.mac-gate {
+  position: absolute; inset: 0; z-index: 95; display: grid; place-items: center;
+  background: rgba(10, 10, 14, .58); backdrop-filter: blur(6px);
+  transition: opacity .25s ease, visibility .25s ease;
+}
+.mac-gate.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.mac-gate[hidden] { display: none; }
+.mac-gate-card { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; max-width: 380px; padding: 0 20px; }
+.mac-gate-icon { width: 54px; height: 54px; }
+.mac-gate-button {
+  display: inline-flex; align-items: center; gap: 8px; padding: 14px 30px; border-radius: 999px;
+  background: #000; color: #fff; border: 1px solid #000; font: 700 15px var(--ui); cursor: pointer;
+  transition: transform .18s cubic-bezier(.3, 1.6, .5, 1);
+}
+.mac-gate-button:hover { transform: scale(1.04); }
+.mac-gate-button:active { transform: scale(.97); }
+.mac-gate-hint { margin: 0; color: #fff; font-size: 13px; opacity: .85; max-width: 320px; }
+
+/* ---------------------------------------------------------------------- now playing (compact only) */
+.mac-now-playing { display: none; padding: 16px; }
+.mac-now-playing h3 { margin: 0 0 10px; font: 700 13px var(--ui); }
+.mac-np-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--bar-border); }
+.mac-np-icon { width: 28px; height: 28px; flex: none; }
+.mac-np-name { flex: 1; font: 600 13px var(--ui); }
+.mac-app-toggle { padding: 5px 14px; border-radius: 999px; border: 1px solid var(--win-border); background: none; color: var(--win-text); font: 600 12px var(--ui); cursor: pointer; }
+.mac-np-row.is-playing .mac-app-toggle { background: var(--mint); border-color: #000; }
+
+/* ---------------------------------------------------------------------- table (headphones, airpods, sticky) */
+.mac-table { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 26px; width: 100%; }
+.mac-headphones, .mac-airpods {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; font: inherit; padding: 4px;
+}
+.mac-sticker-svg { width: 96px; height: 96px; }
+/* The cord leaves the left ear cup and rises toward the laptop, ending in the plug.
+   Unplugged, it swings down around the ear cup. */
+.mac-cable { position: absolute; left: -96px; top: -30px; width: 120px; height: 100px; pointer-events: none;
+  transform-origin: 112px 92px; transition: transform .45s cubic-bezier(.3, 1.5, .5, 1); }
+.mac-cord { width: 120px; height: 100px; display: block; }
+.mac-plug { position: absolute; left: -10px; top: -8px; width: 44px; height: 44px; transform: rotate(40deg); }
+.mac-headphones { margin-left: 104px; }
+.mac-headphones:not(.is-connected) .mac-cable { transform: rotate(-38deg) translateY(10px); }
+.mac-headphones:hover .mac-cable { transform: rotate(4deg); }
+.mac-headphones:not(.is-connected):hover .mac-cable { transform: rotate(-30deg) translateY(10px); }
+.mac-device-label { font: 500 12px var(--ui); font-style: italic; transform: rotate(-1.5deg); opacity: .78; }
+.mac-airpods { transition: transform .2s ease; }
+.mac-airpods:not(.is-connected) .mac-sticker-svg { transform: rotate(-6deg) scale(.96); opacity: .8; }
+
+/* ---------------------------------------------------------------------- sticky note checklist */
+.mac-sticky {
+  width: 216px; padding: 16px 16px 14px; background: var(--sun); border: 1px solid #000; border-radius: 3px;
+  transform: rotate(-2deg); box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
+}
+.mac-sticky h3 { margin: 0 0 10px; font: 400 18px var(--display); text-transform: uppercase; letter-spacing: .01em; }
+.mac-sticky ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.mac-sticky-item { display: flex; align-items: flex-start; gap: 8px; font: 600 13px var(--ui); line-height: 1.3; }
+.mac-sticky-check { width: 17px; height: 17px; flex: none; margin-top: 1px; border-radius: 50%; border: 1px solid #000; background: #fff; }
+.mac-sticky-check svg { display: none; width: 100%; height: 100%; }
+.mac-sticky-item.is-done .mac-sticky-check svg { display: block; }
+.mac-sticky-item.is-done .mac-sticky-check { border-color: transparent; }
+.mac-sticky-item.is-done span:last-child { text-decoration: line-through; opacity: .6; }
+
+/* ---------------------------------------------------------------------- compact mode (< 760px) */
+.mac-stage.is-compact { display: block; }
+.mac-stage.is-compact .mac-laptop { width: 100%; }
+.mac-stage.is-compact .mac-bezel {
+  width: 100%; height: auto; background: none; border: none; box-shadow: none; border-radius: 0; overflow: visible;
+}
+.mac-stage.is-compact .mac-notch, .mac-stage.is-compact .mac-hinge, .mac-stage.is-compact .mac-base { display: none; }
+.mac-stage.is-compact .mac-scale-wrap { position: static; width: 100% !important; height: auto !important; transform: none !important; border-radius: 12px; border: 1px solid #000; }
+.mac-stage.is-compact .mac { width: 100%; height: auto; }
+.mac-stage.is-compact .mac-wallpaper,
+.mac-stage.is-compact .mac-windows-layer,
+.mac-stage.is-compact .mac-dock { display: none; }
+.mac-stage.is-compact .mac-menubar { position: static; border-radius: 12px 12px 0 0; }
+.mac-stage.is-compact .mac-menubar-left > :not(.mac-apple):not(.mac-menubar-appname) { display: none; }
+.mac-stage.is-compact .mac-controlcenter { display: none !important; }
+.mac-stage.is-compact .mac-status-cc { display: none; }
+.mac-stage.is-compact .mac-now-playing { display: block; }
+.mac-stage.is-compact .mac-panel-host { position: static; max-width: 360px; margin: 0 auto; display: flex; justify-content: center; padding: 0 12px 8px; }
+.mac-stage.is-compact .mac-notifications { position: absolute; top: 8px; right: 8px; left: 8px; width: auto; }
+.mac-stage.is-compact .mac-gate { position: absolute; border-radius: 12px; }
+.mac-stage.is-compact .mac-table { width: 100%; justify-content: center; }
+
+/* ---------------------------------------------------------------------- accessibility / motion */
+@media (prefers-reduced-motion: reduce) {
+  .mac-window, .mac-notification, .mac-gate, .mac-dock-icon, .mac-cable, .mac-airpods { transition: none !important; animation: none !important; }
+}
+.mac[data-appearance="dark"] :focus-visible { outline-color: var(--paper); }

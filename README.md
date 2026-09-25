@@ -2,6 +2,8 @@
 
 A native macOS menu bar mixer: per-app volume, mute, and output routing.
 
+Try it in your browser, with sound: **[still.bibas.dev](https://still.bibas.dev)**
+
 Still gives every app its own volume slider and its own output device, from a panel that
 hangs off the menu bar. Play music through your headphones while a call stays on the
 speakers, or turn one noisy app down without touching anything else.

@@ -1,0 +1,610 @@
+/* Still menu bar panel — pixel replica of Sources/Still/MixerPanel.swift.
+   Scoped entirely under .still-panel (and .still-menu, its popup). Light is the
+   default; a `.mac[data-appearance="dark"]` ancestor switches every token to dark. */
+
+.still-panel {
+  --bg: rgba(246, 246, 246, 0.82);
+  --border: rgba(0, 0, 0, 0.13);
+  --shadow: 0 22px 46px rgba(0, 0, 0, 0.22), 0 4px 14px rgba(0, 0, 0, 0.14);
+  --text-primary: rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(60, 60, 67, 0.6);
+  --text-tertiary: rgba(60, 60, 67, 0.32);
+  --accent: #0a84ff;
+  --divider: rgba(0, 0, 0, 0.1);
+  --hover: rgba(0, 0, 0, 0.055);
+  --hover-strong: rgba(0, 0, 0, 0.07);
+  --press: rgba(0, 0, 0, 0.12);
+  --track-bg: #d5d5da;
+  --thumb-bg: #ffffff;
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  --meter-track: rgba(0, 0, 0, 0.08);
+  --meter-fill: rgba(0, 0, 0, 0.32);
+  --switch-track-on: #0a84ff;
+  --switch-track-off: rgba(0, 0, 0, 0.16);
+  --switch-knob: #ffffff;
+  --menu-bg: rgba(252, 252, 252, 0.92);
+  --menu-border: rgba(0, 0, 0, 0.1);
+  --menu-shadow: 0 10px 28px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --menu-hover-bg: var(--accent);
+  --menu-hover-text: #ffffff;
+  --icon-tertiary: rgba(60, 60, 67, 0.4);
+  --warning: #ff9500;
+
+  position: relative;
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+
+/* Header/list/footer are clipped to the rounded corners here; the toast and the
+   popup menus are appended as siblings of this wrapper so they can escape it
+   (an ancestor with backdrop-filter becomes the containing block for fixed
+   position, so popups use position: absolute against the panel root instead,
+   which only works if that root itself isn't clipping). */
+.still-panel-inner {
+  display: flex;
+  flex-direction: column;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.mac[data-appearance="dark"] .still-panel {
+  --bg: rgba(40, 40, 40, 0.78);
+  --border: rgba(255, 255, 255, 0.1);
+  --shadow: 0 26px 54px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.35);
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(235, 235, 245, 0.6);
+  --text-tertiary: rgba(235, 235, 245, 0.35);
+  --accent: #0a84ff;
+  --divider: rgba(255, 255, 255, 0.12);
+  --hover: rgba(255, 255, 255, 0.07);
+  --hover-strong: rgba(255, 255, 255, 0.09);
+  --press: rgba(255, 255, 255, 0.14);
+  --track-bg: #4a4a4d;
+  --thumb-bg: #ffffff;
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+  --meter-track: rgba(255, 255, 255, 0.1);
+  --meter-fill: rgba(255, 255, 255, 0.38);
+  --switch-track-on: #0a84ff;
+  --switch-track-off: rgba(255, 255, 255, 0.16);
+  --menu-bg: rgba(52, 52, 54, 0.92);
+  --menu-border: rgba(255, 255, 255, 0.12);
+  --menu-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.4);
+  --icon-tertiary: rgba(235, 235, 245, 0.45);
+}
+
+.still-panel, .still-panel *, .still-panel *::before, .still-panel *::after {
+  box-sizing: border-box;
+}
+
+/* :where() so this reset carries no specificity of its own — the specific
+   button classes below (.still-enable-btn, .still-mute-btn, etc.) must be
+   able to override it on plain specificity, not just win ties by luck of
+   selector shape. */
+.still-panel :where(button) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+  text-align: left;
+}
+
+.still-panel svg { display: block; fill: currentColor; }
+
+/* Only show a focus ring for real keyboard navigation, not for the
+   open()-time auto-focus or a mouse click — matches how these controls
+   read in the real app, where focus is invisible until you Tab. */
+.still-panel button:focus,
+.still-panel input:focus {
+  outline: none;
+}
+.still-panel button:focus-visible,
+.still-panel input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- header ---------- */
+
+.still-header {
+  padding: 11px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.still-header-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.still-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.still-spacer { flex: 1 1 auto; min-width: 0; }
+
+.still-header-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+
+.still-header-sub .still-icon { color: var(--text-secondary); flex: 0 0 auto; }
+
+.still-device-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ---------- switch ---------- */
+
+.still-switch {
+  position: relative;
+  width: 26px;
+  height: 15px;
+  border-radius: 8px;
+  background: var(--switch-track-off);
+  flex: 0 0 auto;
+  transition: background-color 0.15s ease;
+}
+
+.still-switch[aria-checked="true"] { background: var(--switch-track-on); }
+
+.still-switch-knob {
+  position: absolute;
+  top: 1.5px;
+  left: 1.5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--switch-knob);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: left 0.15s ease;
+}
+
+.still-switch[aria-checked="true"] .still-switch-knob { left: 12.5px; }
+
+/* ---------- separators ---------- */
+
+.still-separator {
+  height: 1px;
+  margin: 0 12px;
+  background: var(--divider);
+  flex: 0 0 auto;
+}
+
+/* ---------- list ---------- */
+
+.still-list {
+  padding: 8px 12px;
+}
+
+.still-list[hidden] { display: none; }
+
+.still-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.still-sections[hidden] { display: none; }
+
+.still-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.still-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0 8px 2px;
+}
+
+/* ---------- enable notice ---------- */
+
+.still-enable-notice {
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.still-enable-notice[hidden] { display: none; }
+
+.still-enable-title { font-size: 13px; font-weight: 600; }
+
+.still-enable-body {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.still-enable-foot {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+.still-enable-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.still-enable-btn:hover { filter: brightness(1.08); }
+.still-enable-btn:active { filter: brightness(0.92); }
+
+/* ---------- empty state ---------- */
+
+.still-empty {
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.still-empty[hidden] { display: none; }
+
+.still-empty .still-icon { color: var(--text-tertiary); }
+
+.still-empty-title { font-size: 12px; font-weight: 500; }
+
+.still-empty-body { font-size: 11px; color: var(--text-secondary); }
+
+.still-link {
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.still-link:hover { text-decoration: underline; }
+
+/* ---------- rows ---------- */
+
+.still-row {
+  padding: 7px 8px;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.still-row:hover { background: var(--hover); }
+
+.still-row-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.still-row-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.still-row-icon svg { width: 100%; height: 100%; }
+
+.still-row-icon.is-inactive { opacity: 0.55; }
+
+.still-row-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.still-row-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.still-output-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.still-output-btn:hover { color: var(--text-primary); }
+
+.still-output-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.still-output-btn .still-icon { flex: 0 0 auto; color: var(--text-tertiary); }
+
+.still-pin-btn {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0;
+}
+
+.still-row:hover .still-pin-btn,
+.still-pin-btn.is-pinned {
+  opacity: 1;
+}
+
+.still-pin-btn.is-pinned { color: var(--text-primary); }
+
+.still-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.still-row-controls.is-muted { opacity: 0.5; }
+
+.still-mute-btn {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+/* ---------- slider ---------- */
+
+.still-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 14px;
+  background: transparent;
+  cursor: default;
+}
+
+.still-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0%,
+    var(--accent) var(--fill, 0%),
+    var(--track-bg) var(--fill, 0%),
+    var(--track-bg) 100%
+  );
+}
+
+.still-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--thumb-bg);
+  box-shadow: var(--thumb-shadow);
+}
+
+.still-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--track-bg);
+}
+
+.still-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.still-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--thumb-bg);
+  box-shadow: var(--thumb-shadow);
+}
+
+.still-percent {
+  flex: 0 0 auto;
+  width: 34px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---------- level meter ---------- */
+
+.still-meter {
+  height: 3px;
+  border-radius: 1.5px;
+  background: var(--meter-track);
+  margin: 0 44px 0 36px;
+  overflow: hidden;
+}
+
+.still-meter[hidden] { display: none; }
+
+.still-meter-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 1.5px;
+  background: var(--meter-fill);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* ---------- status line ---------- */
+
+.still-status {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding-left: 36px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.still-status[hidden] { display: none; }
+
+.still-status.is-quiet { color: var(--text-tertiary); }
+
+.still-status .still-icon { flex: 0 0 auto; position: relative; top: 1px; }
+
+/* ---------- footer ---------- */
+
+.still-footer {
+  position: relative;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  flex: 0 0 auto;
+}
+
+.still-settings-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.still-settings-btn:hover { background: var(--hover-strong); }
+.still-settings-btn:active { background: var(--press); }
+
+.still-ellipsis-wrap { position: relative; flex: 0 0 auto; }
+
+.still-ellipsis-btn {
+  width: 24px;
+  height: 18px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.still-ellipsis-btn:hover { background: var(--hover-strong); }
+.still-ellipsis-btn:active { background: var(--press); }
+
+/* ---------- toast ---------- */
+
+.still-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 44px;
+  transform: translate(-50%, 4px);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  box-shadow: var(--menu-shadow);
+  font-size: 11px;
+  color: var(--text-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+  z-index: 20;
+}
+
+.still-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- popup menus (output menu, "more options" menu) ----------
+   Positioned in JS (top/left or top/right, in px, relative to the panel
+   root) and appended directly to the panel root so they sit outside
+   .still-panel-inner's clip. */
+
+.still-menu {
+  position: absolute;
+  min-width: 190px;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--menu-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid var(--menu-border);
+  box-shadow: var(--menu-shadow);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.still-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.still-menu-item:hover,
+.still-menu-item:focus-visible {
+  background: var(--menu-hover-bg);
+  color: var(--menu-hover-text);
+  outline: none;
+}
+
+.still-menu-check {
+  width: 13px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.still-menu-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--divider);
+}
+
+/* ---------- icons ---------- */
+
+.still-icon { display: flex; align-items: center; justify-content: center; }
